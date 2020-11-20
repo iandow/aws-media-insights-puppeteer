@@ -10,7 +10,7 @@ Run it with Docker:
     docker build --tag=cas-puppeteer:latest .
     docker run --rm -v "$PWD":/usr/src/app -e WEBAPP_URL=https://d1y2qgp44g5rhq.cloudfront.net cas-puppeteer:latest
     
-    Note, you can make changes to app.js without rebuilding the docker container.
+Note, you can make changes to app.js without rebuilding the docker container.
 
 Here's how to run it *without* Docker:
 
