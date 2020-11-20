@@ -1,3 +1,6 @@
 aws-media-insights-puppeteer.iml
 node_modules
 package-lock.json
+*.png
+.DS_Store
+.idea/

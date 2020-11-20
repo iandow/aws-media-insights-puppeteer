@@ -6,6 +6,7 @@ The automation code is in `app.js`. It uses the node [puppeteer](https://develop
 
 Run it with Docker:
     
+    npm i puppeteer
     docker build --tag=cas-puppeteer:latest .
     docker run --rm -v "$PWD":/usr/src/app -e WEBAPP_URL=https://d1y2qgp44g5rhq.cloudfront.net cas-puppeteer:latest
     

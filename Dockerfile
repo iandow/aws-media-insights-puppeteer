@@ -11,5 +11,4 @@ RUN cd /tmp &&\
     wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb &&\
     dpkg -i google-chrome-stable_current_amd64.deb;
 
-
 CMD ["/usr/bin/node", "/usr/src/app/app.js"]
