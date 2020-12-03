@@ -1,8 +1,12 @@
 const puppeteer = require('puppeteer');
-
+const ScreenshotTester = require('puppeteer-screenshot-tester')
 
 let url = process.env.WEBAPP_URL;
 (async () => {
+    const tester = await ScreenshotTester(0.8, false, false, [], {
+        transparency: 0.5
+    })
+
     console.log("Loading " + url)
     // Chromium doesn't support video playback, so use Chrome instead
     // const browser = await  puppeteer.launch({executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true})
@@ -143,6 +147,11 @@ let url = process.env.WEBAPP_URL;
     await page.click('#collapse-2 > div > div:nth-child(2) > button:nth-child(1)');
     await page.waitForTimeout(500)
     await page.screenshot({path: 'screenshot11_configure_workflow_form_select_all.png'})
+
+    console.log("Screenshot validated?")
+    console.log(await tester(page, 'test2', {
+        fullPage: true,
+    }))
 
     await browser.close();
     console.log("Done")
