@@ -1,5 +1,7 @@
 const puppeteer = require('puppeteer');
 const ScreenshotTester = require('puppeteer-screenshot-tester')
+const { promisify } = require('util')
+const sleep = promisify(setTimeout)
 
 let url = process.env.WEBAPP_URL;
 (async () => {
@@ -42,18 +44,17 @@ let url = process.env.WEBAPP_URL;
         // Wait up to 5 seconds for the asset list to load
         await page.waitForFunction(selector => !!document.querySelector(selector), {polling:1000, timeout: 3000}, workflowStatusSelector);
         let workflowStatus = await page.evaluate(selector => document.querySelector(selector).innerText, workflowStatusSelector);
-        // wait for workflow if it has not completed yet
-        if (workflowStatus != "Complete") {
-            console.log("Waiting for workflow to complete...")
-            // Wait up to 30 minutes for the workflow to complete
-            await page.waitForFunction(
-              selector => document.querySelector(selector).innerText == "Complete",
-              {polling:10000, timeout:30*60*1000},
-              workflowStatusSelector);
+        // wait up to 30 minutes for workflow to complete
+        let i = 30
+        console.log("Waiting for workflow to complete...")
+        while (workflowStatus != "Complete" && i > 0) {
             // print the workflow status
             workflowStatus = await page.evaluate(selector => document.querySelector(selector).innerText, workflowStatusSelector);
-            console.log("workflowStatus: " + workflowStatus)
+            i = i - 1
+            await sleep(60000);
+            console.log(i + " minutes remaining")
         }
+        console.log("workflowStatus: " + workflowStatus)
     } catch (e) {
         console.log('Workflow status does not exist. Did you start a workflow?' + e)
     }
