@@ -71,6 +71,7 @@ let url = process.env.WEBAPP_URL;
             workflowStatus = await page.evaluate(selector => document.querySelector(selector).innerText, workflowStatusSelector);
             i = i - 1
             await sleep(60000);
+            await page.goto(url,  {waitUntil: 'networkidle0'});
             console.log(i + " minutes remaining")
         }
         console.log("workflowStatus: " + workflowStatus)
