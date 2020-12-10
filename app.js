@@ -9,12 +9,36 @@ let url = process.env.WEBAPP_URL;
         transparency: 0.5
     })
 
+    const test_collection_screenshot = await ScreenshotTester(
+      0.1, // threshold
+      false, // anti-aliasing
+      false, // ignore colors
+      {
+          ignoreRectangles: [[36, 335, 169, 106], [649, 345, 372, 54], [568, 428, 170, 85] ],
+      }, // rectangles
+      {
+          transparency: 0.5
+      }
+    )
+
     const test_screenshot_containing_video = await ScreenshotTester(
       0.1, // threshold
       false, // anti-aliasing
       false, // ignore colors
       {
-          ignoreRectangles: [[670, 95, 583, 331]],
+          ignoreRectangles: [[670, 95, 583, 331], [648, 657, 403, 27]],
+      }, // rectangles
+      {
+          transparency: 0.5
+      }
+    )
+
+    const test_words_screenshot = await ScreenshotTester(
+      0.1, // threshold
+      false, // anti-aliasing
+      false, // ignore colors
+      {
+          ignoreRectangles: [[670, 95, 583, 331], [648, 657, 403, 27], [15, 284, 610, 70]],
       }, // rectangles
       {
           transparency: 0.5
@@ -52,7 +76,7 @@ let url = process.env.WEBAPP_URL;
     }
     await page.waitForTimeout(1000)
     // await page.screenshot({path: 'screenshot01_collection_view.png'})
-    console.log("validating collection view: "+await test_screenshot(page, 'screenshot01_collection_view', {
+    console.log("validating collection view: "+await test_collection_screenshot(page, 'screenshot01_collection_view', {
         fullPage: true,
     }))
 
@@ -143,7 +167,7 @@ let url = process.env.WEBAPP_URL;
         // no data in this tab
     }
     // await page.screenshot({path: 'screenshot06_tab_words.png'})
-    console.log("validating words: "+await test_screenshot_containing_video(page, 'screenshot06_tab_words', {
+    console.log("validating words: "+await test_words_screenshot(page, 'screenshot06_tab_words', {
         fullPage: true,
     }))
 
