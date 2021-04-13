@@ -82,6 +82,10 @@ let password = process.env.TEMP_PASSWORD;
         fullPage: true,
     }))
 
+    await browser.close();
+    console.log("Done")
+
+
     // get workflow status and wait if its not complete
     const workflowStatusSelector = 'tbody > tr:nth-child(1) > td:nth-child(3) > a'
     await page.waitForSelector(workflowStatusSelector,  {polling:1000, timeout: 3000})
