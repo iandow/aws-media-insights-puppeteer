@@ -4,6 +4,8 @@ const { promisify } = require('util')
 const sleep = promisify(setTimeout)
 
 let url = process.env.WEBAPP_URL;
+let password = process.env.TEMP_PASSWORD;
+
 (async () => {
     const test_screenshot = await ScreenshotTester(0.8, false, false, [], {
         transparency: 0.5
