@@ -4,7 +4,7 @@ const { promisify } = require('util')
 const sleep = promisify(setTimeout)
 
 let url = process.env.WEBAPP_URL;
-let password = process.env.TEMP_PASSWORD;
+let temp_password = process.env.TEMP_PASSWORD;
 
 (async () => {
     const test_screenshot = await ScreenshotTester(0.8, false, false, [], {
@@ -55,13 +55,14 @@ let password = process.env.TEMP_PASSWORD;
     await page.setViewport({ width: 1280, height: 926 });
     await page.goto(url,  {waitUntil: 'networkidle0'});
     // Type in the username
-    await page.type('input','ianwow@amazon.com')
+    await page.type('input','s3sink@bigendiandata.com')
     // Type in the password
-    await page.type('#app > div > div > div > div.Section__sectionBody___3DCrX > div:nth-child(2) > input','Password123@')
-    // await page.screenshot({path: 'screenshot00_authentication.png'})
+    await page.type('#app > div > div > div > div.Section__sectionBody___3DCrX > div:nth-child(2) > input', temp_password)
     console.log("validating auth form: "+await test_screenshot(page, 'screenshot00_authentication', {
         fullPage: true,
     }))
+
+    // await page.screenshot({path: 'screenshot00_authentication.png'})
 
     console.log("Page title: " + await page.title())
     console.log("authenticating...")
@@ -71,6 +72,29 @@ let password = process.env.TEMP_PASSWORD;
       page.waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
 
+    // wait for password reset form
+    try {
+        await page.waitForSelector('#app > div > div > div > div.Section__sectionBody___3DCrX > div > input')
+    } catch (e) {
+        console.log('password reset form did not render')
+    }
+    await page.waitForTimeout(1000)
+
+    // enter new password
+    console.log("validating password reset form: " + await test_screenshot(page, 'screenshot00_password_reset', {
+        fullPage: true,
+    }))
+    await page.type('#app > div > div > div > div.Section__sectionBody___3DCrX > div > input', temp_password)
+    
+    console.log("Page title: " + await page.title())
+    console.log("submitting new password...")
+    // click Submit
+    await Promise.all([
+      page.click("button"),
+      page.waitForNavigation({ waitUntil: 'networkidle0' }),
+    ]);
+
+    // wait for catalog view to load
     try {
         await page.waitForSelector('tbody > tr:nth-child(1) > td:nth-child(3) > a')
     } catch (e) {
@@ -85,6 +109,8 @@ let password = process.env.TEMP_PASSWORD;
     await browser.close();
     console.log("Done")
 
+    // Stopping here for now....
+    //////////////////////////////////////////////////////
 
     // get workflow status and wait if its not complete
     const workflowStatusSelector = 'tbody > tr:nth-child(1) > td:nth-child(3) > a'
