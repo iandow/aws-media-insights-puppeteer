@@ -69,14 +69,19 @@ let temp_password = process.env.TEMP_PASSWORD;
     // click Login button
     await Promise.all([
       page.click("button"),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
+      page.waitForTimeout(2000)
+      // page.waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
 
     // wait for password reset form
     try {
-        await page.waitForSelector('#app > div > div > div > div.Section__sectionBody___3DCrX > div > input')
+      // Wait up to 3 seconds for the password reset form to load
+      passwordResetSelector = '#app > div > div > div > div.Section__sectionBody___3DCrX > div > input'
+      await page.waitForFunction(selector => !!document.querySelector(selector), {polling:1000, timeout: 3000}, passwordResetSelector);
     } catch (e) {
-        console.log('password reset form did not render')
+      console.log('password reset form did not render')
+      await browser.close();
+      console.log("Done")
     }
     await page.waitForTimeout(1000)
 
@@ -91,7 +96,8 @@ let temp_password = process.env.TEMP_PASSWORD;
     // click Submit
     await Promise.all([
       page.click("button"),
-      page.waitForNavigation({ waitUntil: 'networkidle0' }),
+      page.waitForTimeout(2000)
+      // page.waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
 
     // wait for catalog view to load
