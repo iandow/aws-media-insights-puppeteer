@@ -90,15 +90,35 @@ let temp_password = process.env.TEMP_PASSWORD;
         fullPage: true,
     }))
     await page.type('#app > div > div > div > div.Section__sectionBody___3DCrX > div > input', temp_password)
-    
+
     console.log("Page title: " + await page.title())
     console.log("submitting new password...")
     // click Submit
     await Promise.all([
       page.click("button"),
       page.waitForTimeout(2000)
-      // page.waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
+
+    // wait for empty catalog view to load
+    try {
+        await page.waitForSelector('tbody > tr:nth-child(1) > td:nth-child(3) > a')
+        await page.waitForSelector('tbody > tr > td > div > div')
+    } catch (e) {
+        console.log('collection view did not load')
+    }
+    await page.waitForTimeout(1000)
+    const text = await page.$eval("tbody > tr > td > div > div", el => el.textContent);
+    console.log("Table contents: '" + text + "'")
+
+    await browser.close();
+    console.log("Done")
+
+    //////////////////////////////////////////////////////
+    // Stopping here for now....
+    //
+    // submit a job so we have an asset to analyze
+    //
+    //////////////////////////////////////////////////////
 
     // wait for catalog view to load
     try {
@@ -112,11 +132,6 @@ let temp_password = process.env.TEMP_PASSWORD;
         fullPage: true,
     }))
 
-    await browser.close();
-    console.log("Done")
-
-    // Stopping here for now....
-    //////////////////////////////////////////////////////
 
     // get workflow status and wait if its not complete
     const workflowStatusSelector = 'tbody > tr:nth-child(1) > td:nth-child(3) > a'
