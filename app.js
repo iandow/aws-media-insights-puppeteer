@@ -58,14 +58,14 @@ let temp_password = process.env.TEMP_PASSWORD;
     await page.type('input','s3sink@bigendiandata.com')
     // Type in the password
     await page.type('#app > div > div > div > div.Section__sectionBody___3DCrX > div:nth-child(2) > input', temp_password)
-    console.log("validating auth form: "+await test_screenshot(page, 'screenshot00_authentication', {
+    console.log("Validating auth form: "+await test_screenshot(page, 'screenshot00_authentication', {
         fullPage: true,
     }))
 
     // await page.screenshot({path: 'screenshot00_authentication.png'})
 
     console.log("Page title: " + await page.title())
-    console.log("authenticating...")
+    console.log("Authenticating...")
     // click Login button
     await Promise.all([
       page.click("button"),
@@ -73,41 +73,66 @@ let temp_password = process.env.TEMP_PASSWORD;
       // page.waitForNavigation({ waitUntil: 'networkidle0' }),
     ]);
 
-    // wait for password reset form
+    // // wait for password reset form
+    // try {
+    //   // Wait up to 3 seconds for the password reset form to load
+    //   passwordResetSelector = '#app > div > div > div > div.Section__sectionBody___3DCrX > div > input'
+    //   await page.waitForFunction(selector => !!document.querySelector(selector), {polling:1000, timeout: 3000}, passwordResetSelector);
+    //   // enter new password
+    //   console.log("validating password reset form: " + await test_screenshot(page, 'screenshot00_password_reset', {
+    //     fullPage: true,
+    //   }))
+    //   await page.waitForTimeout(1000)
+
+      // Are we on the password reset page?
+      passwordHeaderSelector = "#app > div > div > div > div.Section__sectionHeader___13iO4"
+      if (await page.$(passwordHeaderSelector) !== null) {
+        console.log("found password reset form")
+        // enter new password
+        await page.type('#app > div > div > div > div.Section__sectionBody___3DCrX > div > input', temp_password)
+        console.log("submitting new password...")
+        // click Submit button
+        await Promise.all([
+          page.click("button"),
+          page.waitForTimeout(2000)
+        ]);
+      } else {
+        console.log('Temporary password has already been reset.')
+      }
+
+    // Wait for catalog view to load
+    console.log("Waiting 5s for catalog view to load...")
+    await page.waitForTimeout(5000)
+
+    // Validate that the catalog table is not empty
+    tableEmptyMessageSelector = "tbody > tr > td > div > div"
     try {
-      // Wait up to 3 seconds for the password reset form to load
-      passwordResetSelector = '#app > div > div > div > div.Section__sectionBody___3DCrX > div > input'
-      await page.waitForFunction(selector => !!document.querySelector(selector), {polling:1000, timeout: 3000}, passwordResetSelector);
-      // enter new password
-      console.log("validating password reset form: " + await test_screenshot(page, 'screenshot00_password_reset', {
-        fullPage: true,
-      }))
-      await page.type('#app > div > div > div > div.Section__sectionBody___3DCrX > div > input', temp_password)
-      await page.waitForTimeout(1000)
-      console.log("Page title: " + await page.title())
-      console.log("submitting new password...")
-      // click Submit
-      await Promise.all([
-        page.click("button"),
-        page.waitForTimeout(2000)
-      ]);
+      if (await page.$(tableEmptyMessageSelector) !== null) {
+        const text = await page.$eval("tbody > tr > td > div > div", el => el.textContent);
+        if (text === 'There are no records to show') {
+          throw new Error("There are no records to show.")
+        }
+      }
     } catch (e) {
-      console.log('password reset form did not render')
+      console.error(e)
+      process.exit(-1)
     }
 
-    // wait for empty catalog view to load
-    await page.waitForTimeout(1000)
-    const text = await page.$eval("tbody > tr > td > div > div", el => el.textContent);
-    errorMsg = 'Missing expected text in catalog view'
-    console.assert(text === 'There are no records to show', errorMsg)
+    // Validate that the workflow status for the first asset in the
+    // table says, "Complete"
+    console.log("Validating that the first asset has status, 'Complete'")
+    const assetWorkflowStatusSelector = "td.tableWordWrap:nth-child(3) > a:nth-child(1)"
+    try {
+      await page.waitForSelector(assetWorkflowStatusSelector, {polling:1000, timeout: 3000})
+    } catch (e) {
+      console.log('Missing expected asset workflow status.\n' + e)
+    }
+    try {
+      const text = await page.$eval(assetWorkflowStatusSelector, el => el.textContent);
+    } catch (e) {
+      console.assert(text === 'Complete', "Asset workflow status does not have the expected value, 'Complete'")
+    }
 
-    // //////////////////////////////////////////////////////
-    // // Stopping here for now....
-    // //
-    // // submit a job so we have an asset to analyze
-    // //
-    // //////////////////////////////////////////////////////
-    //
     // // wait for catalog view to load
     // try {
     //     await page.waitForSelector('tbody > tr:nth-child(1) > td:nth-child(3) > a')
@@ -143,22 +168,28 @@ let temp_password = process.env.TEMP_PASSWORD;
     // } catch (e) {
     //     console.log('Workflow status does not exist. Did you start a workflow?' + e)
     // }
-    //
-    // // VALIDATE OBJECTS TAB
-    // await page.click('tbody > tr:nth-child(1) > td:nth-child(6) > a');
-    // // wait until video loads
-    // const video_selector='#videoPlayer > div.vjs-control-bar > div.vjs-remaining-time.vjs-time-control.vjs-control > span.vjs-remaining-time-display'
-    // await page.waitForSelector(video_selector,  {polling:1000, timeout: 5000})
-    // const rounded_button_selector = '#app > div > div.container-fluid > div > div:nth-child(1) > div:nth-child(2) > div > div > div:nth-child(2) > div > button:nth-child(2)'
-    // try {
-    //     await page.waitForSelector(rounded_button_selector, {timeout: 5000})
-    // } catch(e) {
-    //     // no data in this tab
-    // // }    await page.screenshot({path: 'screenshot02_tab_objects.png'})
-    //     console.log("validating objects: "+await test_screenshot_containing_video(page, 'screenshot02_tab_objects', {
-    //         fullPage: true,
-    //     }))
-    // }
+
+    // VALIDATE OBJECTS TAB
+    console.log("Loading objects tab.")
+    await page.click('tbody > tr:nth-child(1) > td:nth-child(6) > a');
+    // wait until video loads
+    const video_selector='#videoPlayer > div.vjs-control-bar > div.vjs-remaining-time.vjs-time-control.vjs-control > span.vjs-remaining-time-display'
+    await page.waitForSelector(video_selector,  {polling:1000, timeout: 5000})
+    // validate that object detection results are present
+    console.log("Validating that object detection results are present.")
+    const rounded_button_selector = '#app > div > div.container-fluid > div > div:nth-child(1) > div:nth-child(2) > div > div > div:nth-child(2) > div > button:nth-child(2)'
+    try {
+        if (await page.waitForSelector(rounded_button_selector) === null) {
+          throw new Error("Missing object detection results")
+        }
+    } catch(e) {
+        console.log(e)
+    }
+
+    // console.log("validating objects: "+await test_screenshot_containing_video(page, 'screenshot02_tab_objects',   {
+    // fullPage: true,
+    // }))
+
     //
     // // VALIDATE CELEBRITY TAB
     // let tab_selector='#__BVID__28___BV_tab_button__'
